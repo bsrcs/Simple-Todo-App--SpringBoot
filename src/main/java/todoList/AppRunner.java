@@ -27,6 +27,7 @@ public class AppRunner implements CommandLineRunner {
 
         int response;
         String input;
+
         do {
             showOptions();
             response=getIntFromUser(scanner);
@@ -48,6 +49,7 @@ public class AppRunner implements CommandLineRunner {
                     int id = getIntFromUser(scanner);
                     Task taskToUpdate = toDoListService.getTask(Long.valueOf(id));
                     boolean isMarked = taskToUpdate.isMarkedAsComplete();
+                    // flip the flag
                     taskToUpdate.setMarkedAsComplete(!isMarked);
                     if(isMarked){
                         System.out.println("Successfully marked as incomplete");
@@ -58,16 +60,33 @@ public class AppRunner implements CommandLineRunner {
                     toDoListService.createOrUpdateTask(taskToUpdate);
                     break;
                 case 4:
+                    System.out.println("Enter id that you want to delete:");
+                    Task taskToDelete = new Task();
+                    int idToDelete = getIntFromUser(scanner);
+                    taskToDelete.setId(Long.valueOf(idToDelete));
+                    toDoListService.delete(taskToDelete);
+                    System.out.println("You successfully deleted " + idToDelete + ". task!");
+                    break;
+                case 5:
+                    System.out.println("Enter id that you want to update: ");
+                    int idToUpdate = getIntFromUser(scanner);
+                    Task taskToUpdateTitle = toDoListService.getTask(Long.valueOf(idToUpdate));
+                    System.out.println("Update\n(1)-title\n"+"(2)-description");
+                    int titleOrDescriptionChoiceNo = getIntFromUser(scanner);
+                    if(titleOrDescriptionChoiceNo == 1){
+                        taskToUpdateTitle.setTaskTitle(getStringFromUser(scanner,"Enter new title: "));
+                    }
+                    if(titleOrDescriptionChoiceNo == 2){
+                        taskToUpdateTitle.setDescription(getStringFromUser(scanner,"Enter new description: "));
+                    }
+                    toDoListService.createOrUpdateTask(taskToUpdateTitle);
+                    break;
+                case 6:
                     System.out.println("You have exited! :(");
                     break;
             }
 
-        }while (response != 4);
-
-
-       // System.out.println(toDoListService.createTask(task));
-        //System.out.println(toDoListService.getAllTasks());
-
+        }while (response != 6);
 
     }
 
@@ -85,6 +104,8 @@ public class AppRunner implements CommandLineRunner {
                             "(1)-to create a todo\n"+
                             "(2)-to view your todos\n" +
                             "(3)-to mark/unmark your todo as completed/incomplete\n" +
-                            "(4)-to quit");
+                            "(4)-to delete a todo\n"+
+                            "(5)-to update the title or description\n"+
+                            "(6)-to quit");
     }
 }
