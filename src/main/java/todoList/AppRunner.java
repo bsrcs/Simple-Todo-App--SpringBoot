@@ -1,13 +1,17 @@
 package todoList;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import todoList.models.Task;
+import todoList.models.User;
 import todoList.services.ToDoListService;
+import todoList.services.UserService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 @SpringBootApplication
@@ -15,6 +19,13 @@ public class AppRunner implements CommandLineRunner {
 
     @Autowired
     ToDoListService toDoListService;
+    @Autowired
+    UserService userService;
+
+    @Value("${todoapp.username}")
+    String defaultUsername;
+    @Value("${todoapp.password}")
+    String defaultPass;
 
     public static void main(String[] args) {
         SpringApplication.run(AppRunner.class, args);
@@ -22,11 +33,23 @@ public class AppRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        insertDefaultData();
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Welcome to TODO Command Line App!");
+        System.out.println("Welcome to TO DO Command Line App!");
 
         int response;
 
+        //check if user credentials are correct
+        Optional<User> user = userService.getUserByUsernameAndPassword(getStringFromUser(scanner,"Enter username: "),
+                getStringFromUser(scanner,"Enter password: "));
+        if(!user.isPresent()){
+            System.out.println("Bad credentials! :| ");
+            return;
+        }else{
+            System.out.println("Welcome " + user.get().getUsername() + " :)");
+        }
+
+        // show task options
         do {
             showOptions();
             response=getIntFromUser(scanner);
@@ -115,5 +138,12 @@ public class AppRunner implements CommandLineRunner {
                             "(4)-to delete a todo\n"+
                             "(5)-to update the title or description\n"+
                             "(6)-to quit");
+    }
+    private void insertDefaultData(){
+        User user = new User();
+        user.setId(Long.valueOf(1));
+        user.setUsername(defaultUsername);
+        user.setPassword(defaultPass);
+        userService.createOrUpdateUser(user);
     }
 }

@@ -10,6 +10,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "task")
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -18,4 +19,8 @@ public class Task {
     private String description;
     @Column(name="IS_MARKED", length = 5, nullable=true)
     private boolean isMarkedAsComplete;
+    //logical annotation
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
