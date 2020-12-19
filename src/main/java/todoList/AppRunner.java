@@ -26,7 +26,6 @@ public class AppRunner implements CommandLineRunner {
         System.out.println("Welcome to TODO Command Line App!");
 
         int response;
-        String input;
 
         do {
             showOptions();
@@ -73,13 +72,22 @@ public class AppRunner implements CommandLineRunner {
                     Task taskToUpdateTitle = toDoListService.getTask(Long.valueOf(idToUpdate));
                     System.out.println("Update\n(1)-title\n"+"(2)-description");
                     int titleOrDescriptionChoiceNo = getIntFromUser(scanner);
+                    String inputFromUser="";
                     if(titleOrDescriptionChoiceNo == 1){
-                        taskToUpdateTitle.setTaskTitle(getStringFromUser(scanner,"Enter new title: "));
+                        inputFromUser = getStringFromUser(scanner,"Enter new title: ");
+                        if(!inputFromUser.trim().equals("")){
+                            taskToUpdateTitle.setTaskTitle(inputFromUser);
+                        }
                     }
                     if(titleOrDescriptionChoiceNo == 2){
-                        taskToUpdateTitle.setDescription(getStringFromUser(scanner,"Enter new description: "));
+                        inputFromUser = getStringFromUser(scanner,"Enter new description: ");
+                        if(!inputFromUser.trim().equals("")){
+                            taskToUpdateTitle.setDescription(inputFromUser);
+                        }
                     }
-                    toDoListService.createOrUpdateTask(taskToUpdateTitle);
+                    if(!inputFromUser.trim().equals("")) {
+                        toDoListService.createOrUpdateTask(taskToUpdateTitle);
+                    }
                     break;
                 case 6:
                     System.out.println("You have exited! :(");
