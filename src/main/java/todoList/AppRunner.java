@@ -15,9 +15,9 @@ import java.util.Optional;
 import java.util.Scanner;
 
 @SpringBootApplication
-public class AppRunner implements CommandLineRunner {
+public class AppRunner {
 
-    @Autowired
+  /*  @Autowired
     ToDoListService toDoListService;
     @Autowired
     UserService userService;
@@ -25,14 +25,14 @@ public class AppRunner implements CommandLineRunner {
     @Value("${todoapp.username}")
     String defaultUsername;
     @Value("${todoapp.password}")
-    String defaultPass;
+    String defaultPass;*/
 
     public static void main(String[] args) {
         SpringApplication.run(AppRunner.class, args);
     }
 
-    @Override
-    public void run(String... args) throws Exception {
+    // use this in case of commandlinerunner app
+   /* public void run(String... args) throws Exception {
         insertDefaultData();
         Scanner scanner = new Scanner(System.in);
         System.out.println("Welcome to TO DO Command Line App!");
@@ -145,5 +145,5 @@ public class AppRunner implements CommandLineRunner {
         user.setUsername(defaultUsername);
         user.setPassword(defaultPass);
         userService.createOrUpdateUser(user);
-    }
+    }*/
 }

@@ -22,5 +22,6 @@ public class Task {
     //logical annotation
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", nullable = false)
+    //foreign key
     private User user;
 }
