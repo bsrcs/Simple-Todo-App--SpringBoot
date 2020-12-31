@@ -34,4 +34,9 @@ public class UserServiceImpl implements UserService{
     public Optional<User> getUserByUsernameAndPassword(String username, String password) {
         return userRepo.findByUsernameAndPassword(username,password);
     }
+
+    @Override
+    public Optional<User> findByUserName(String username) {
+        return userRepo.findByUsername(username);
+    }
 }

@@ -11,7 +11,10 @@ import todoList.models.Task;
 import todoList.models.User;
 import todoList.services.ToDoListService;
 import todoList.services.UserService;
+import todoList.util.HashUtil;
 
+import javax.servlet.http.HttpServletResponse;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,32 +27,40 @@ public class ToDoController {
     UserService userService;
 
     @GetMapping(path = "/tasks")
-    public ResponseEntity<List<Task>> getAllTasks(){
+    public ResponseEntity<List<Task>> getAllTasks(@RequestHeader(value = "secret-token") String secret){
        return new ResponseEntity<>(toDoListService.getAllTasks(), HttpStatus.OK);
     }
 
     @GetMapping(path = "/task/{id}")
-    public ResponseEntity<Task> getTask(@PathVariable Long id){
+    public ResponseEntity<Task> getTask(@RequestHeader(value = "secret-token") String secret,@PathVariable Long id){
         return new ResponseEntity<>(toDoListService.getTask(id), HttpStatus.OK);
     }
 
     @PostMapping(path = "/task")
-    public ResponseEntity<?> createTask(@RequestBody CreateTaskRequestDto createTaskRequestDto){
+    //When we name a header specifically, the header is required by default
+    public ResponseEntity<?> createTask(
+            @RequestHeader(value = "secret-token") String secret,
+            @RequestBody CreateTaskRequestDto createTaskRequestDto){
         User user = userService.getUser(createTaskRequestDto.getUserId());
-        CreateTaskResponseDto response = new CreateTaskResponseDto();
+        if(checkIfTokenIsValid(secret)){
+            CreateTaskResponseDto response = new CreateTaskResponseDto();
 
-        Task newTaskToSave = new Task();
-        newTaskToSave.setUser(user);
-        newTaskToSave.setDescription(createTaskRequestDto.getDescription());
-        newTaskToSave.setTaskTitle(createTaskRequestDto.getTaskTitle());
-        Task savedTask = toDoListService.createOrUpdateTask(newTaskToSave);
+            Task newTaskToSave = new Task();
+            newTaskToSave.setUser(user);
+            newTaskToSave.setDescription(createTaskRequestDto.getDescription());
+            newTaskToSave.setTaskTitle(createTaskRequestDto.getTaskTitle());
+            Task savedTask = toDoListService.createOrUpdateTask(newTaskToSave);
 
-        response.setUserId(createTaskRequestDto.getUserId());
-        response.setTaskId(savedTask.getId());
-        response.setDescription(savedTask.getDescription());
-        response.setTaskTitle(savedTask.getTaskTitle());
+            response.setUserId(createTaskRequestDto.getUserId());
+            response.setTaskId(savedTask.getId());
+            response.setDescription(savedTask.getDescription());
+            response.setTaskTitle(savedTask.getTaskTitle());
 
-        return new ResponseEntity<>(response,HttpStatus.OK);
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<>("Bad token passed!",HttpStatus.FORBIDDEN);
+        }
     }
 
     @PostMapping(path = "/user")
@@ -62,16 +73,37 @@ public class ToDoController {
     }
 
     @PostMapping(path = "/login")
-    public  ResponseEntity<String> login(@RequestBody UserRequestDto userRequestDto){
+    public  ResponseEntity<String> login(HttpServletResponse response, @RequestBody UserRequestDto userRequestDto) throws NoSuchAlgorithmException {
         Optional<User> checkedUser = userService.getUserByUsernameAndPassword(userRequestDto.getUsername(), userRequestDto.getPassword());
         if(checkedUser.isPresent()){
             //successful login
+            String token=userRequestDto.getUsername()+":"+HashUtil.getHash(userRequestDto.getPassword());
+            response.addHeader("secret-token",token);
             return new ResponseEntity<>("Successfully logged in!", HttpStatus.ACCEPTED);
         }
         else{
             //failed login
             return new ResponseEntity<>("Aoh! Something went wrong!",HttpStatus.FORBIDDEN);
         }
+    }
+
+    private boolean checkIfTokenIsValid(String token){
+        boolean isTokenValid=false;
+        //example: csgirl:8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
+        String[] splittedToken = token.split(":");
+        String username = splittedToken[0];
+        String hashedPassword = splittedToken[1];
+
+        //check the userOptional credentials which is stored in database
+        Optional<User> userOptional = userService.findByUserName(username);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String realHash = HashUtil.getHash(user.getPassword());
+            if (realHash.equals(hashedPassword)) {
+                isTokenValid = true;
+            }
+        }
+        return isTokenValid;
     }
 
 }
