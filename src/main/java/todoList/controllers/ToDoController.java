@@ -1,5 +1,6 @@
 package todoList.controllers;
 
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +50,8 @@ public class ToDoController {
             @RequestBody CreateTaskRequestDto createTaskRequestDto){
 
         if(checkIfTokenIsValid(secret)){
-            User user = userService.findByUserName(getUserName(secret)).get();
+
+            User user = userService.findByUserName(getUserName(new String(secret))).get();
             CreateTaskResponseDto response = new CreateTaskResponseDto();
 
             Task newTaskToSave = new Task();
@@ -85,7 +87,9 @@ public class ToDoController {
         if(checkedUser.isPresent()){
             //successful login
             String token=userRequestDto.getUsername()+":"+HashUtil.getHash(userRequestDto.getPassword());
-            response.addHeader("secret-token",token);
+            // Encode data on your side using BASE64
+            byte[] bytesEncoded = Base64.encodeBase64(token.getBytes());
+            response.addHeader("secret-token", new String(bytesEncoded));
             return new ResponseEntity<>("Successfully logged in!", HttpStatus.ACCEPTED);
         }
         else{
@@ -96,8 +100,11 @@ public class ToDoController {
 
     private boolean checkIfTokenIsValid(String token){
         boolean isTokenValid=false;
+        // Decode data on other side, by processing encoded data
+        byte[] decodedTokenBytes = Base64.decodeBase64(token);
+        String decodedToken = new String(decodedTokenBytes);
         //example: csgirl:8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
-        String[] splittedToken = token.split(":");
+        String[] splittedToken = decodedToken.split(":");
         String username = splittedToken[0];
         String hashedPassword = splittedToken[1];
 
@@ -114,7 +121,10 @@ public class ToDoController {
     }
 
     private String getUserName(String token){
-        String[] splittedToken = token.split(":");
+        // Decode data on other side, by processing encoded data
+        byte[] decodedTokenBytes = Base64.decodeBase64(token);
+        String decodedToken = new String(decodedTokenBytes);
+        String[] splittedToken = decodedToken.split(":");
         String username = splittedToken[0];
 
         return  username;
