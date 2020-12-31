@@ -27,12 +27,18 @@ public class ToDoController {
     UserService userService;
 
     @GetMapping(path = "/tasks")
-    public ResponseEntity<List<Task>> getAllTasks(@RequestHeader(value = "secret-token") String secret){
-       return new ResponseEntity<>(toDoListService.getAllTasks(), HttpStatus.OK);
+    public ResponseEntity<?> getAllTasks(@RequestHeader(value = "secret-token") String secret){
+        if (checkIfTokenIsValid(secret)) {
+            User user = userService.findByUserName(getUserName(secret)).get();
+            List<Task> taskList = toDoListService.getAllTasksOfAUser(user);
+            return new ResponseEntity<>(taskList, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Bad token!", HttpStatus.FORBIDDEN);
+        }
     }
 
     @GetMapping(path = "/task/{id}")
-    public ResponseEntity<Task> getTask(@RequestHeader(value = "secret-token") String secret,@PathVariable Long id){
+    public ResponseEntity<?> getTask(@RequestHeader(value = "secret-token") String secret,@PathVariable Long id){
         return new ResponseEntity<>(toDoListService.getTask(id), HttpStatus.OK);
     }
 
@@ -41,8 +47,9 @@ public class ToDoController {
     public ResponseEntity<?> createTask(
             @RequestHeader(value = "secret-token") String secret,
             @RequestBody CreateTaskRequestDto createTaskRequestDto){
-        User user = userService.getUser(createTaskRequestDto.getUserId());
+
         if(checkIfTokenIsValid(secret)){
+            User user = userService.findByUserName(getUserName(secret)).get();
             CreateTaskResponseDto response = new CreateTaskResponseDto();
 
             Task newTaskToSave = new Task();
@@ -51,7 +58,7 @@ public class ToDoController {
             newTaskToSave.setTaskTitle(createTaskRequestDto.getTaskTitle());
             Task savedTask = toDoListService.createOrUpdateTask(newTaskToSave);
 
-            response.setUserId(createTaskRequestDto.getUserId());
+            response.setUserId(user.getId());
             response.setTaskId(savedTask.getId());
             response.setDescription(savedTask.getDescription());
             response.setTaskTitle(savedTask.getTaskTitle());
@@ -104,6 +111,13 @@ public class ToDoController {
             }
         }
         return isTokenValid;
+    }
+
+    private String getUserName(String token){
+        String[] splittedToken = token.split(":");
+        String username = splittedToken[0];
+
+        return  username;
     }
 
 }

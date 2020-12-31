@@ -3,6 +3,7 @@ package todoList.repos;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import todoList.models.Task;
+import todoList.models.User;
 
 import java.util.List;
 
@@ -12,5 +13,5 @@ public interface ToDoListRepo extends CrudRepository<Task, Long> {
 
     // custom repo method
     Task findFirstByTaskTitle(String taskTitle);
-
+    List<Task> findByUser(User user);
 }

@@ -3,6 +3,7 @@ package todoList.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import todoList.models.Task;
+import todoList.models.User;
 import todoList.repos.ToDoListRepo;
 
 import java.util.ArrayList;
@@ -57,6 +58,10 @@ public class ToDoListServiceImpl implements ToDoListService {
         toDoListRepo.delete(task);
     }
 
+    @Override
+    public List<Task> getAllTasksOfAUser(User user) {
+        return toDoListRepo.findByUser(user);
+    }
 
 
 }
